@@ -1,0 +1,3 @@
+include ':koko-demo'
+include ':koko-lib'
+rootProject.name ='koko-android'
