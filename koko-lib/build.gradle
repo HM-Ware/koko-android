@@ -18,7 +18,7 @@ if (localPropertiesFile.exists()) {
 def PUBLISH_GROUP_ID = 'com.hmware.android'
 def PUBLISH_ARTIFACT_ID = 'koko'
 
-def LIB_VERSION_NAME = '0.0.13'
+def LIB_VERSION_NAME = '0.0.15'
 
 android {
     compileSdkVersion 30

@@ -23,9 +23,9 @@ import com.hmware.android.koko.api.KLogger
 import java.lang.RuntimeException
 
 internal class KokoInternal(
-        internal val application: Application,
-        private val serviceLocator: KokoServiceLocator,
-        private val modules: List<KModule>
+    internal val application: Application,
+    private val serviceLocator: KokoServiceLocator,
+    private val modules: List<KModule>
 ) {
 
     private val lifecycleListener = KokoLifecycleListener(application) {
@@ -34,30 +34,39 @@ internal class KokoInternal(
 
     init {
         modules
+            .forEach { it.moduleDeclaration.invoke(it, application) }
+
+        modules
             .flatMap { it.definitions }
-            .forEach { serviceLocator.registerFactory(it.type, factory = it.factory, key = it.qualifier) }
+            .forEach {
+                serviceLocator.registerFactory(
+                    it.type,
+                    factory = it.factory,
+                    key = it.qualifier
+                )
+            }
     }
 
     fun <T> resolveKObject(
-            type: Class<T>,
-            scope: Any,
-            qualifier: String?,
-            searchForObjectOutsideCurrentScope: Boolean,
-            createObjectIfNotFound : Boolean,
-            requiredObject: Boolean,
-            parameters: KParametersDefinition?
+        type: Class<T>,
+        scope: Any,
+        qualifier: String?,
+        searchForObjectOutsideCurrentScope: Boolean,
+        createObjectIfNotFound: Boolean,
+        requiredObject: Boolean,
+        parameters: KParametersDefinition?
     ): T? {
 
         KokoLogger.log(
-                level = KLogger.Level.DEBUG,
-                message = "Resolving object\n" +
-                        "\t\t Of type: ${type.name}" +
-                        "\t\t For scope : ${scope::class.java.name}"+
-                        "\t\t With qualifier : $qualifier" +
-                        "\t\t SearchForObjectOutsideCurrentScope = $searchForObjectOutsideCurrentScope"+
-                        "\t\t CreateObjectIfNotFound = $createObjectIfNotFound" +
-                        "\t\t RequiredObject = $requiredObject" +
-                        "\t\t Has Parameters = ${parameters != null}"
+            level = KLogger.Level.DEBUG,
+            message = "Resolving object\n" +
+                    "\t\t Of type: ${type.name}" +
+                    "\t\t For scope : ${scope::class.java.name}" +
+                    "\t\t With qualifier : $qualifier" +
+                    "\t\t SearchForObjectOutsideCurrentScope = $searchForObjectOutsideCurrentScope" +
+                    "\t\t CreateObjectIfNotFound = $createObjectIfNotFound" +
+                    "\t\t RequiredObject = $requiredObject" +
+                    "\t\t Has Parameters = ${parameters != null}"
 
         )
 
@@ -67,15 +76,15 @@ internal class KokoInternal(
             serviceLocator.optional(type = type, scope = scope, key = qualifier)
 
 
-
         val result = if (existingObject == null && createObjectIfNotFound) {
             val factory = serviceLocator.findFactory(type, qualifier) ?: throw RuntimeException(
-                    "Unable to resolve required factory\n" +
-                            "\t\tOf type [${type.name}]\n" +
-                            "\t\tWith qualifier [$qualifier]"
+                "Unable to resolve required factory\n" +
+                        "\t\tOf type [${type.name}]\n" +
+                        "\t\tWith qualifier [$qualifier]"
             )
-            val newObject = scope.factory(parameters?.invoke() ?: KDefinitionParameters.EmptyParameters)
-            serviceLocator.add(type= type, obj = newObject, forScope = scope, key = qualifier)
+            val newObject =
+                scope.factory(parameters?.invoke() ?: KDefinitionParameters.EmptyParameters)
+            serviceLocator.add(type = type, obj = newObject, forScope = scope, key = qualifier)
             newObject
         } else {
             existingObject
@@ -84,10 +93,10 @@ internal class KokoInternal(
 
         if (requiredObject && result == null) {
             throw RuntimeException(
-                    "Unable to resolve required object\n" +
-                            "\t\tOf type [${type.name}]\n" +
-                            "\t\tFor scope [$scope]\n" +
-                            "\t\tWith qualifier [$qualifier]"
+                "Unable to resolve required object\n" +
+                        "\t\tOf type [${type.name}]\n" +
+                        "\t\tFor scope [$scope]\n" +
+                        "\t\tWith qualifier [$qualifier]"
             )
         }
 

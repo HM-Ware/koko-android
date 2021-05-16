@@ -18,7 +18,9 @@ package com.hmware.android.koko
 import android.app.Application
 import com.hmware.android.koko.internal.KokoBeanDefinition
 
-class KModule internal constructor(){
+class KModule internal constructor(
+    val moduleDeclaration: KModuleDeclaration
+){
     internal val definitions = arrayListOf<KokoBeanDefinition<*>>()
 
     /**
@@ -56,8 +58,4 @@ typealias KModuleDeclaration = KModule.(Application) -> Unit
 /**
  * Define a Module
  */
-fun kModule(moduleDeclaration: KModuleDeclaration): KModule {
-    val module = KModule()
-    moduleDeclaration(module, Koko.kokoInternal.application)
-    return module
-}
+fun kModule(moduleDeclaration: KModuleDeclaration): KModule = KModule(moduleDeclaration)
