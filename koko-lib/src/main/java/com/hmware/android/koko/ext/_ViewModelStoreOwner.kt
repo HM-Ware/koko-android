@@ -74,7 +74,7 @@ fun <U : ViewModel> ViewModelStoreOwner.getOrCreateKViewModel(
             object : ViewModelProvider.Factory {
                 override fun <T : ViewModel> create(modelClass: Class<T>): T {
                     @Suppress("UNCHECKED_CAST")
-                    return Koko.kokoInternal.resolveKObject(
+                    return Koko.resolveKObject(
                             type = clazz,
                             scope = this@getOrCreateKViewModel,
                             qualifier = qualifier,

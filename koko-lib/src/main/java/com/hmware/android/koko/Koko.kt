@@ -16,29 +16,40 @@
 package com.hmware.android.koko
 
 import android.app.Application
-import com.hmware.android.koko.internal.KokoServiceLocatorImpl
 import com.hmware.android.koko.internal.KokoInternal
 import com.hmware.android.koko.internal.KokoLogger
-import kotlin.RuntimeException
+import com.hmware.android.koko.internal.KokoServiceLocatorImpl
 
-object Koko {
+@PublishedApi
+internal object Koko {
 
+    @PublishedApi
     internal lateinit var kokoInternal : KokoInternal
-    internal val isInitialised : Boolean
+    private val isInitialised : Boolean
         get() = this::kokoInternal.isInitialized
 
-    /**
-     * Build a DefinitionParameters
-     *
-     * @see parameters
-     * return ParameterList
-     */
-    fun parametersOf(vararg parameters: Any?) =
-            if (parameters.size <= KDefinitionParameters.MAX_PARAMS) KDefinitionParameters(*parameters) else error("Can't build DefinitionParameters for more than ${KDefinitionParameters.MAX_PARAMS} arguments")
+    internal fun startKoko(
+        application: Application,
+        modules: List<KModule>,
+        logger: com.hmware.android.koko.api.KLogger? = null
+    ) {
 
-    fun <T> resolveKObject(
+        if (isInitialised) {
+            throw RuntimeException("Koko is already initialised.")
+        }
+
+        KokoLogger.logger = logger
+        kokoInternal = KokoInternal(
+            application = application,
+            serviceLocator = KokoServiceLocatorImpl(),
+            modules = modules
+        )
+    }
+
+    @PublishedApi
+    internal fun <T> resolveKObject(
             type: Class<T>,
-            scope: Any,
+            scope: KScope,
             qualifier: String? = null,
             searchForObjectOutsideCurrentScope: Boolean = true,
             createObjectIfNotFound: Boolean = true,
@@ -62,7 +73,29 @@ object Koko {
     }
 }
 
+@Suppress("unused")
 inline fun <reified T> requiredKObject(
+    scope: KScope,
+    qualifier: String? = null,
+    searchForObjectOutsideCurrentScope: Boolean = true,
+    createObjectIfNotFound: Boolean = true,
+    noinline parameters: KParametersDefinition? = null
+): Lazy<T> = lazy {
+    getRequiredKObject(scope, qualifier, searchForObjectOutsideCurrentScope, createObjectIfNotFound, parameters)
+}
+
+@Suppress("unused")
+inline fun <reified T> optionalKObject(
+    scope: KScope,
+    qualifier: String? = null,
+    searchForObjectOutsideCurrentScope: Boolean = true,
+    createObjectIfNotFound: Boolean = true,
+    noinline parameters: KParametersDefinition? = null
+): Lazy<T?> = lazy {
+    getOptionalKObject(scope, qualifier, searchForObjectOutsideCurrentScope, createObjectIfNotFound, parameters)
+}
+
+inline fun <reified T> getRequiredKObject(
         scope: KScope,
         qualifier: String? = null,
         searchForObjectOutsideCurrentScope: Boolean = true,
@@ -80,7 +113,7 @@ inline fun <reified T> requiredKObject(
     )!!
 }
 
-inline fun <reified T> optionalKObject(
+inline fun <reified T> getOptionalKObject(
         scope: KScope,
         qualifier: String? = null,
         searchForObjectOutsideCurrentScope: Boolean = true,
@@ -98,20 +131,28 @@ inline fun <reified T> optionalKObject(
     )
 }
 
+@Suppress("unused")
+fun clearKScope(scope: KScope) = Koko.kokoInternal.clearScope(scope)
+
+@Suppress("unused")
 fun startKoko(
         application: Application,
         modules: List<KModule>,
         logger: com.hmware.android.koko.api.KLogger? = null
-) {
+) = Koko.startKoko(application, modules, logger)
 
-    if (Koko.isInitialised) {
-        throw RuntimeException("Koko is already initialised.")
-    }
+/**
+ * Build a DefinitionParameters
+ *
+ * @see parameters
+ * return ParameterList
+ */
+@Suppress("unused")
+fun kParametersOf(vararg parameters: Any?) =
+    if (parameters.size <= KDefinitionParameters.MAX_PARAMS) KDefinitionParameters(*parameters) else error("Can't build DefinitionParameters for more than ${KDefinitionParameters.MAX_PARAMS} arguments")
 
-    KokoLogger.logger = logger
-    Koko.kokoInternal = KokoInternal(
-            application = application,
-            serviceLocator = KokoServiceLocatorImpl(),
-            modules = modules
-    )
-}
+/**
+ * Define a Module
+ */
+@Suppress("unused")
+fun kModule(moduleDeclaration: KModuleDeclaration): KModule = KModule(moduleDeclaration)

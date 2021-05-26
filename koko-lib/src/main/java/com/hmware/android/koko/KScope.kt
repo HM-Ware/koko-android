@@ -13,19 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hmware.android.koko.internal
 
-import com.hmware.android.koko.KScope
+package com.hmware.android.koko
 
+typealias KScope = Any
 
-internal interface KokoServiceLocator {
-    fun <T> findBeanDefinition(type: Class<T>, key: Any? = null) : KokoBeanDefinition<T>?
-    fun <T> registerBeanDefinition (definition: KokoBeanDefinition<T>)
-
-    fun <T> add(type: Class<T>, obj: T, forScope: KScope, beanDefinition: KokoBeanDefinition<T>)
-
-    fun <T> get(type: Class<T>, scope: KScope?, key: Any? = null) : T
-    fun <T> optional(type: Class<T>, scope: KScope?, key: Any? = null) : T?
-
-    fun clearScope(scope: KScope)
+object KDefinedScopes {
+    val ApplicationScope : KScope = Any()
+    val UserSessionScope : KScope = Any()
 }

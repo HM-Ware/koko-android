@@ -64,7 +64,7 @@ fun <U> LifecycleOwner.getOrCreateKObject(
         clazz: Class<U>,
         qualifier: String? = null,
         parameters: KParametersDefinition? = null
-): U = Koko.kokoInternal.resolveKObject(
+): U = Koko.resolveKObject(
         type = clazz,
         scope = this@getOrCreateKObject,
         qualifier = qualifier,

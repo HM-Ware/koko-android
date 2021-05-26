@@ -48,6 +48,7 @@ class KDefinitionParameters internal constructor(vararg val values: Any?) {
     /**
      * Tells if it has parameters
      */
+    @Suppress("unused")
     fun isNotEmpty() = !isEmpty()
 
     /**

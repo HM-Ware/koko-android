@@ -15,51 +15,57 @@
  */
 package com.hmware.android.koko.internal
 
-import com.hmware.android.koko.KDefinitionParameters
 import com.hmware.android.koko.KScope
 import com.hmware.android.koko.api.KLogger
 import java.lang.ref.WeakReference
 
 internal class KokoServiceLocatorImpl : KokoServiceLocator {
 
-    private val factoryList = mutableSetOf<BeanFactoryRecord<*>>()
+    private val factoryList = mutableSetOf<KokoBeanDefinition<*>>()
     private val objectList = mutableListOf<BeanRecord<*>>()
 
-    override fun <T> findFactory(type: Class<T>, key: Any?): (KScope.(KDefinitionParameters) -> T)? {
-        val matcher : (BeanFactoryRecord<*>)->Boolean = if (key == null) {
-            { it.clazz == type }
+    override fun <T> findBeanDefinition(type: Class<T>, key: Any?): KokoBeanDefinition<T>? {
+        val matcher : (KokoBeanDefinition<*>)->Boolean = if (key == null) {
+            { it.type == type }
         } else {
-            { it.clazz == type && it.key == key }
+            { it.type == type && it.qualifier == key }
         }
 
         @Suppress("UNCHECKED_CAST")
-        return factoryList.firstOrNull(matcher)?.factory as? KScope.(KDefinitionParameters) -> T
+        return factoryList.firstOrNull(matcher) as? KokoBeanDefinition<T>?
     }
 
-    override fun <T> registerFactory(type: Class<out T>, factory: KScope.(KDefinitionParameters) -> T, key: Any?) {
-        factoryList.add(BeanFactoryRecord(type, factory, key))
+    override fun <T> registerBeanDefinition(definition: KokoBeanDefinition<T>) {
+        factoryList.add(definition)
     }
 
-    override fun <T> add(type: Class<T>, obj: T, forScope: Any, key: Any?) {
-        objectList.add(BeanRecord(
+    override fun <T> add(
+        type: Class<T>,
+        obj: T,
+        forScope: KScope,
+        beanDefinition: KokoBeanDefinition<T>
+    ) {
+        objectList.add(
+            BeanRecord(
                 clazz = type,
                 obj = obj,
                 scope = WeakReference(forScope),
-                key = key
-        ))
+                beanDefinition = beanDefinition
+            )
+        )
     }
 
-    override fun <T> get(type: Class<T>, scope: Any?, key: Any?): T  = optional(type, scope, key)!!
+    override fun <T> get(type: Class<T>, scope: KScope?, key: Any?): T  = optional(type, scope, key)!!
 
     override fun <T> optional(type: Class<T>, scope: Any?, key: Any?): T? {
 
         val conditions = listOfNotNull<(BeanRecord<*>)->Boolean> (
                 { type.isAssignableFrom(it.clazz) },
-                takeIf { scope != null }?.let { { it.scope == scope } },
-                takeIf { key != null }?.let { { it.key == key } }
+                takeIf { scope != null }?.let { { it.beanDefinition.overrideScope != null || it.scope == scope } },
+                takeIf { key != null }?.let { { it.beanDefinition.qualifier == key } }
         )
 
-        val matcher : (BeanRecord<*>)->Boolean = { conditions.all { condition -> condition.invoke(it) } }
+        val matcher: (BeanRecord<*>) -> Boolean = { conditions.all { condition -> condition.invoke(it) } }
         val matchingResult = objectList.filter(matcher)
 
         if (matchingResult.size > 1) {
@@ -77,7 +83,7 @@ internal class KokoServiceLocatorImpl : KokoServiceLocator {
         return matchingResult.firstOrNull()?.obj as? T
     }
 
-    override fun clearScope(scope: Any) {
+    override fun clearScope(scope: KScope) {
         KokoLogger.log(
                 level = KLogger.Level.DEBUG,
                 message = "Clearing object for scope: ${scope::class.java.name}"
@@ -86,16 +92,10 @@ internal class KokoServiceLocatorImpl : KokoServiceLocator {
         objectList.removeAll { it.scope.get() == scope }
     }
 
-    private data class BeanFactoryRecord<T>(
-            val clazz: Class<out T>,
-            val factory: KScope.(KDefinitionParameters) -> T,
-            val key: Any?
-    )
-
     private class BeanRecord<T>(
             val clazz: Class<T>,
             val obj: T,
-            val scope: WeakReference<Any>,
-            val key: Any?
+            val scope: WeakReference<KScope>,
+            val beanDefinition: KokoBeanDefinition<T>
     )
 }

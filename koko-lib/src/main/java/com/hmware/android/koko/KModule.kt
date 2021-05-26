@@ -26,14 +26,30 @@ class KModule internal constructor(
     /**
      * Declare a definition in current Module
      */
-    fun <T> addDefinition(type: Class<T>, qualifier: Any?, definition: KDefinition<T>) {
+    fun <T> addDefinition(type: Class<T>, qualifier: Any?, overrideScope: KScope? = null, definition: KDefinition<T>) {
         definitions.add(
-                KokoBeanDefinition(
-                        type,
-                        definition,
-                        qualifier
-                )
+            KokoBeanDefinition(
+                type,
+                definition,
+                qualifier,
+                overrideScope
+            )
         )
+    }
+
+    /**
+     * Declare a Factory definition
+     * @param qualifier
+     * @param overrideScope When set created object would be attached to that scope and not caller scope.
+     * @param definition - definition function
+     */
+    @Suppress("unused")
+    inline fun <reified T> creator(
+            qualifier: Any? = null,
+            overrideScope: KScope? = null,
+            noinline definition: KDefinition<T>
+    ){
+        addDefinition(T::class.java, qualifier, overrideScope, definition)
     }
 
     /**
@@ -41,21 +57,29 @@ class KModule internal constructor(
      * @param qualifier
      * @param definition - definition function
      */
-    inline fun <reified T> creator(
-            qualifier: Any? = null,
-            noinline definition: KDefinition<T>
+    @Suppress("unused")
+    inline fun <reified T> appSessionCreator(
+        qualifier: Any? = null,
+        noinline definition: KDefinition<T>
     ){
-        addDefinition(T::class.java, qualifier, definition)
+        addDefinition(T::class.java, qualifier, KDefinedScopes.ApplicationScope, definition)
+    }
+
+    /**
+     * Declare a Factory definition
+     * @param qualifier
+     * @param definition - definition function
+     */
+    @Suppress("unused")
+    inline fun <reified T> userSessionCreator(
+        qualifier: Any? = null,
+        noinline definition: KDefinition<T>
+    ){
+        addDefinition(T::class.java, qualifier, KDefinedScopes.UserSessionScope, definition)
     }
 }
-
-typealias KScope = Any
 
 typealias KDefinition<T> = KScope.(KDefinitionParameters) -> T
 
 typealias KModuleDeclaration = KModule.(Application) -> Unit
 
-/**
- * Define a Module
- */
-fun kModule(moduleDeclaration: KModuleDeclaration): KModule = KModule(moduleDeclaration)

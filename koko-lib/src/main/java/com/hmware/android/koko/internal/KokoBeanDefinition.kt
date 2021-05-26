@@ -16,9 +16,14 @@
 package com.hmware.android.koko.internal
 
 import com.hmware.android.koko.KDefinition
+import com.hmware.android.koko.KScope
 
 internal class KokoBeanDefinition<out T>(
         val type: Class<out T>,
         val factory: KDefinition<out T>,
-        val qualifier: Any?
+        val qualifier: Any?,
+        /**
+         * When set created object would be attached to that scope and not caller scope.
+         */
+        val overrideScope: KScope?
 )

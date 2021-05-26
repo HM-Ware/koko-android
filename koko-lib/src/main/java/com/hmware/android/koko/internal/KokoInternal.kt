@@ -19,17 +19,20 @@ import android.app.Application
 import com.hmware.android.koko.KDefinitionParameters
 import com.hmware.android.koko.KModule
 import com.hmware.android.koko.KParametersDefinition
+import com.hmware.android.koko.KScope
 import com.hmware.android.koko.api.KLogger
 import java.lang.RuntimeException
 
 internal class KokoInternal(
     internal val application: Application,
     private val serviceLocator: KokoServiceLocator,
+    @Suppress("CanBeParameter")
     private val modules: List<KModule>
 ) {
 
+    @Suppress("unused")
     private val lifecycleListener = KokoLifecycleListener(application) {
-        serviceLocator.clearScope(it)
+        clearScope(it)
     }
 
     init {
@@ -39,11 +42,7 @@ internal class KokoInternal(
         modules
             .flatMap { it.definitions }
             .forEach {
-                serviceLocator.registerFactory(
-                    it.type,
-                    factory = it.factory,
-                    key = it.qualifier
-                )
+                serviceLocator.registerBeanDefinition(it)
             }
     }
 
@@ -77,14 +76,15 @@ internal class KokoInternal(
 
 
         val result = if (existingObject == null && createObjectIfNotFound) {
-            val factory = serviceLocator.findFactory(type, qualifier) ?: throw RuntimeException(
+            val definition = serviceLocator.findBeanDefinition(type, qualifier) ?: throw RuntimeException(
                 "Unable to resolve required factory\n" +
                         "\t\tOf type [${type.name}]\n" +
                         "\t\tWith qualifier [$qualifier]"
             )
+            val factory = definition.factory
             val newObject =
                 scope.factory(parameters?.invoke() ?: KDefinitionParameters.EmptyParameters)
-            serviceLocator.add(type = type, obj = newObject, forScope = scope, key = qualifier)
+            serviceLocator.add(type = type, obj = newObject, forScope = definition.overrideScope ?: scope, beanDefinition = definition)
             newObject
         } else {
             existingObject
@@ -101,5 +101,9 @@ internal class KokoInternal(
         }
 
         return result
+    }
+
+    fun clearScope(scope: KScope) {
+        serviceLocator.clearScope(scope)
     }
 }
