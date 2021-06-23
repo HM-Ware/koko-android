@@ -26,9 +26,9 @@ internal class KokoServiceLocatorImpl : KokoServiceLocator {
 
     override fun <T> findBeanDefinition(type: Class<T>, key: Any?): KokoBeanDefinition<T>? {
         val matcher : (KokoBeanDefinition<*>)->Boolean = if (key == null) {
-            { it.type == type }
+            { type.isAssignableFrom(it.type) }
         } else {
-            { it.type == type && it.qualifier == key }
+            { type.isAssignableFrom(it.type) && it.qualifier == key }
         }
 
         @Suppress("UNCHECKED_CAST")
