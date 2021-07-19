@@ -26,9 +26,10 @@ import java.lang.RuntimeException
 internal class KokoInternal(
     internal val application: Application,
     private val serviceLocator: KokoServiceLocator,
-    @Suppress("CanBeParameter")
-    private val modules: List<KModule>
+    modules : List<KModule>
 ) {
+
+    private val _modules: MutableList<KModule> = modules.toMutableList()
 
     @Suppress("unused")
     private val lifecycleListener = KokoLifecycleListener(application) {
@@ -103,7 +104,21 @@ internal class KokoInternal(
         return result
     }
 
+    fun addModule(module: KModule) {
+        module.moduleDeclaration.invoke(module, application)
+        module.definitions.forEach {
+            serviceLocator.registerBeanDefinition(it)
+        }
+        _modules.add(module)
+    }
+
     fun clearScope(scope: KScope) {
         serviceLocator.clearScope(scope)
+
+    }
+
+    fun reset() {
+        serviceLocator.reset()
+        _modules.clear()
     }
 }

@@ -28,4 +28,5 @@ internal interface KokoServiceLocator {
     fun <T> optional(type: Class<T>, scope: KScope?, key: Any? = null) : T?
 
     fun clearScope(scope: KScope)
+    fun reset()
 }

@@ -92,6 +92,11 @@ internal class KokoServiceLocatorImpl : KokoServiceLocator {
         objectList.removeAll { it.scope.get() == scope }
     }
 
+    override fun reset() {
+        factoryList.clear()
+        objectList.clear()
+    }
+
     private class BeanRecord<T>(
             val clazz: Class<T>,
             val obj: T,

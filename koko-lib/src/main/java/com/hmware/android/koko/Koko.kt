@@ -23,18 +23,15 @@ import com.hmware.android.koko.internal.KokoServiceLocatorImpl
 @PublishedApi
 internal object Koko {
 
-    @PublishedApi
-    internal lateinit var kokoInternal : KokoInternal
-    private val isInitialised : Boolean
-        get() = this::kokoInternal.isInitialized
+    private var kokoInternal : KokoInternal? = null
 
-    internal fun startKoko(
+    fun startKoko(
         application: Application,
         modules: List<KModule>,
         logger: com.hmware.android.koko.api.KLogger? = null
     ) {
 
-        if (isInitialised) {
+        if (kokoInternal != null) {
             throw RuntimeException("Koko is already initialised.")
         }
 
@@ -46,8 +43,12 @@ internal object Koko {
         )
     }
 
-    @PublishedApi
-    internal fun <T> resolveKObject(
+    fun terminateKoko() {
+        kokoInternal?.reset()
+        kokoInternal = null
+    }
+
+    fun <T> resolveKObject(
             type: Class<T>,
             scope: KScope,
             qualifier: String? = null,
@@ -57,11 +58,10 @@ internal object Koko {
             parameters: KParametersDefinition? = null
     ): T? {
 
-        if (isInitialised.not()) {
-            throw RuntimeException("Koko is not initialised. Please make sure to call startKoko")
-        }
+        val koko = kokoInternal
+            ?: throw RuntimeException("Koko is not initialised. Please make sure to call startKoko")
 
-        return kokoInternal.resolveKObject(
+        return koko.resolveKObject(
                 type,
                 scope,
                 qualifier,
@@ -71,6 +71,8 @@ internal object Koko {
                 parameters
         )
     }
+
+    fun clearKScope(scope: KScope) = kokoInternal?.clearScope(scope)
 }
 
 @Suppress("unused")
@@ -132,7 +134,7 @@ inline fun <reified T> getOptionalKObject(
 }
 
 @Suppress("unused")
-fun clearKScope(scope: KScope) = Koko.kokoInternal.clearScope(scope)
+fun clearKScope(scope: KScope) = Koko.clearKScope(scope)
 
 @Suppress("unused")
 fun startKoko(
@@ -140,6 +142,9 @@ fun startKoko(
         modules: List<KModule>,
         logger: com.hmware.android.koko.api.KLogger? = null
 ) = Koko.startKoko(application, modules, logger)
+
+@Suppress("unused")
+fun terminateKoko() = Koko.terminateKoko()
 
 /**
  * Build a DefinitionParameters
