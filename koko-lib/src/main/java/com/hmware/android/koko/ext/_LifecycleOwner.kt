@@ -18,6 +18,7 @@ package com.hmware.android.koko.ext
 import androidx.lifecycle.LifecycleOwner
 import com.hmware.android.koko.Koko
 import com.hmware.android.koko.KParametersDefinition
+import kotlin.reflect.KClass
 
 /**
  * Lazy get an instance, if new object is created it will be scoped to LifecycleOwner
@@ -26,8 +27,8 @@ import com.hmware.android.koko.KParametersDefinition
  * @param parameters - parameters to pass to the BeanDefinition
  * @param clazz
  */
-fun <T> LifecycleOwner.scopedKObject(
-        clazz: Class<T>,
+fun <T: Any> LifecycleOwner.scopedKObject(
+        clazz: KClass<T>,
         qualifier: String? = null,
         parameters: KParametersDefinition? = null
 ): Lazy<T> = lazy { getOrCreateKObject(clazz, qualifier, parameters) }
@@ -38,7 +39,7 @@ fun <T> LifecycleOwner.scopedKObject(
  * @param qualifier - Koko BeanDefinition qualifier (if have several beanDefinition of the same type)
  * @param parameters - parameters to pass to the BeanDefinition
  */
-inline fun <reified T> LifecycleOwner.scopedKObject(
+inline fun <reified T: Any> LifecycleOwner.scopedKObject(
         qualifier: String? = null,
         noinline parameters: KParametersDefinition? = null
 ): Lazy<T> = lazy { getScopedKObject<T>(qualifier, parameters) }
@@ -49,23 +50,23 @@ inline fun <reified T> LifecycleOwner.scopedKObject(
  * @param qualifier - Koko BeanDefinition qualifier (if have several beanDefinition of the same type)
  * @param parameters - parameters to pass to the BeanDefinition
  */
-inline fun <reified T> LifecycleOwner.getScopedKObject(
+inline fun <reified T: Any> LifecycleOwner.getScopedKObject(
         qualifier: String? = null,
         noinline parameters: KParametersDefinition? = null
 ): T {
-    return getOrCreateKObject(T::class.java, qualifier, parameters)
+    return getOrCreateKObject(T::class, qualifier, parameters)
 
 }
 
 /**
  * This extension tries to find the given type or creates a new one with the given function
  */
-fun <U> LifecycleOwner.getOrCreateKObject(
-        clazz: Class<U>,
+fun <U: Any> LifecycleOwner.getOrCreateKObject(
+        clazz: KClass<U>,
         qualifier: String? = null,
         parameters: KParametersDefinition? = null
 ): U = Koko.resolveKObject(
-        type = clazz,
+        kotlinType = clazz,
         scope = this@getOrCreateKObject,
         qualifier = qualifier,
         searchForObjectOutsideCurrentScope = true,

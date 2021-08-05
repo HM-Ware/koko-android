@@ -22,6 +22,7 @@ import com.hmware.android.koko.internal.KokoInternalImpl
 import com.hmware.android.koko.internal.KokoInternalMock
 import com.hmware.android.koko.internal.KokoLogger
 import com.hmware.android.koko.internal.KokoServiceLocatorImpl
+import kotlin.reflect.KClass
 
 @PublishedApi
 internal object Koko {
@@ -55,8 +56,8 @@ internal object Koko {
         kokoInternal = null
     }
 
-    fun <T> resolveKObject(
-            type: Class<T>,
+    fun <T: Any> resolveKObject(
+            kotlinType: KClass<T>,
             scope: KScope,
             qualifier: String? = null,
             searchForObjectOutsideCurrentScope: Boolean = true,
@@ -69,7 +70,7 @@ internal object Koko {
             ?: throw RuntimeException("Koko is not initialised. Please make sure to call startKoko")
 
         return koko.resolveKObject(
-                type,
+                kotlinType,
                 scope,
                 qualifier,
                 searchForObjectOutsideCurrentScope,
@@ -104,7 +105,7 @@ inline fun <reified T> optionalKObject(
     getOptionalKObject(scope, qualifier, searchForObjectOutsideCurrentScope, createObjectIfNotFound, parameters)
 }
 
-inline fun <reified T> getRequiredKObject(
+inline fun <reified T: Any> getRequiredKObject(
         scope: KScope,
         qualifier: String? = null,
         searchForObjectOutsideCurrentScope: Boolean = true,
@@ -112,7 +113,7 @@ inline fun <reified T> getRequiredKObject(
         noinline parameters: KParametersDefinition? = null
 ): T {
     return Koko.resolveKObject(
-            type = T::class.java,
+            kotlinType = T::class,
             scope = scope,
             qualifier = qualifier,
             searchForObjectOutsideCurrentScope = searchForObjectOutsideCurrentScope,
@@ -122,7 +123,7 @@ inline fun <reified T> getRequiredKObject(
     )!!
 }
 
-inline fun <reified T> getOptionalKObject(
+inline fun <reified T: Any> getOptionalKObject(
         scope: KScope,
         qualifier: String? = null,
         searchForObjectOutsideCurrentScope: Boolean = true,
@@ -130,7 +131,7 @@ inline fun <reified T> getOptionalKObject(
         noinline parameters: KParametersDefinition? = null
 ): T? {
     return Koko.resolveKObject(
-            type = T::class.java,
+            kotlinType = T::class,
             scope = scope,
             qualifier = qualifier,
             searchForObjectOutsideCurrentScope = searchForObjectOutsideCurrentScope,

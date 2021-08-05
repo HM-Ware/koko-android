@@ -20,6 +20,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelStoreOwner
 import com.hmware.android.koko.Koko
 import com.hmware.android.koko.KParametersDefinition
+import kotlin.reflect.KClass
 
 /**
  * Lazy get a viewModel instance, if new object is created it will be scoped to ViewModelStoreOwner
@@ -29,7 +30,7 @@ import com.hmware.android.koko.KParametersDefinition
  * @param clazz
  */
 fun <T : ViewModel> ViewModelStoreOwner.scopedKViewModel(
-        clazz: Class<T>,
+        clazz: KClass<T>,
         qualifier: String? = null,
         parameters: KParametersDefinition? = null
 ): Lazy<T> = lazy { getOrCreateKViewModel(clazz, qualifier, parameters) }
@@ -55,7 +56,7 @@ inline fun <reified T : ViewModel> ViewModelStoreOwner.getScopedKViewModel(
         qualifier: String? = null,
         noinline parameters: KParametersDefinition? = null
 ): T {
-    return getOrCreateKViewModel(T::class.java, qualifier, parameters)
+    return getOrCreateKViewModel(T::class, qualifier, parameters)
 }
 
 
@@ -65,7 +66,7 @@ inline fun <reified T : ViewModel> ViewModelStoreOwner.getScopedKViewModel(
  * `getOrCreateViewModel<YourCustomViewModelInterface> { YourCustomViewModelImpl() }`
  */
 fun <U : ViewModel> ViewModelStoreOwner.getOrCreateKViewModel(
-        clazz: Class<U>,
+        clazz: KClass<U>,
         qualifier: String? = null,
         parameters: KParametersDefinition? = null
 ): U {
@@ -75,7 +76,7 @@ fun <U : ViewModel> ViewModelStoreOwner.getOrCreateKViewModel(
                 override fun <T : ViewModel> create(modelClass: Class<T>): T {
                     @Suppress("UNCHECKED_CAST")
                     return Koko.resolveKObject(
-                            type = clazz,
+                            kotlinType = clazz,
                             scope = this@getOrCreateKViewModel,
                             qualifier = qualifier,
                             searchForObjectOutsideCurrentScope = false,
@@ -87,8 +88,8 @@ fun <U : ViewModel> ViewModelStoreOwner.getOrCreateKViewModel(
             }
     ).let {
         if (qualifier.isNullOrBlank())
-            it.get(clazz)
+            it.get(clazz.java)
         else
-            it.get(qualifier, clazz)
+            it.get(qualifier, clazz.java)
     }
 }

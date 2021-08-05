@@ -22,6 +22,7 @@ import com.hmware.android.koko.KParametersDefinition
 import com.hmware.android.koko.KScope
 import com.hmware.android.koko.api.KLogger
 import java.lang.RuntimeException
+import kotlin.reflect.KClass
 
 internal class KokoInternalImpl(
     internal val application: Application,
@@ -47,8 +48,8 @@ internal class KokoInternalImpl(
             }
     }
 
-    override fun <T> resolveKObject(
-        type: Class<T>,
+    override fun <T: Any> resolveKObject(
+        kotlinType: KClass<T>,
         scope: Any,
         qualifier: String?,
         searchForObjectOutsideCurrentScope: Boolean,
@@ -57,10 +58,12 @@ internal class KokoInternalImpl(
         parameters: KParametersDefinition?
     ): T? {
 
+        val javaType: Class<T> = kotlinType.java
+
         KokoLogger.log(
             level = KLogger.Level.DEBUG,
             message = "Resolving object" +
-                    "\t\t Type: ${type.simpleName}" +
+                    "\t\t Type: ${javaType.simpleName}" +
                     "\t\t For scope : ${scope::class.java.simpleName}" +
                     "\t\t With qualifier : $qualifier" +
                     "\t\t SearchForObjectOutsideCurrentScope = $searchForObjectOutsideCurrentScope" +
@@ -71,21 +74,21 @@ internal class KokoInternalImpl(
         )
 
         val existingObject = if (searchForObjectOutsideCurrentScope)
-            serviceLocator.optional(type = type, scope = null, key = qualifier)
+            serviceLocator.optional(type = javaType, scope = null, key = qualifier)
         else
-            serviceLocator.optional(type = type, scope = scope, key = qualifier)
+            serviceLocator.optional(type = javaType, scope = scope, key = qualifier)
 
 
         val result = if (existingObject == null && createObjectIfNotFound) {
-            val definition = serviceLocator.findBeanDefinition(type, qualifier) ?: throw RuntimeException(
+            val definition = serviceLocator.findBeanDefinition(javaType, qualifier) ?: throw RuntimeException(
                 "Unable to resolve required factory\n" +
-                        "\t\tOf type [${type.name}]\n" +
+                        "\t\tOf type [${javaType.name}]\n" +
                         "\t\tWith qualifier [$qualifier]"
             )
             val factory = definition.factory
             val newObject =
                 scope.factory(parameters?.invoke() ?: KDefinitionParameters.EmptyParameters)
-            serviceLocator.add(type = type, obj = newObject, forScope = definition.overrideScope ?: scope, beanDefinition = definition)
+            serviceLocator.add(type = javaType, obj = newObject, forScope = definition.overrideScope ?: scope, beanDefinition = definition)
             newObject
         } else {
             existingObject
@@ -95,7 +98,7 @@ internal class KokoInternalImpl(
         if (requiredObject && result == null) {
             throw RuntimeException(
                 "Unable to resolve required object\n" +
-                        "\t\tOf type [${type.name}]\n" +
+                        "\t\tOf type [${javaType.name}]\n" +
                         "\t\tFor scope [$scope]\n" +
                         "\t\tWith qualifier [$qualifier]"
             )

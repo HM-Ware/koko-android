@@ -19,10 +19,11 @@ package com.hmware.android.koko.internal
 import com.hmware.android.koko.KModule
 import com.hmware.android.koko.KParametersDefinition
 import com.hmware.android.koko.KScope
+import kotlin.reflect.KClass
 
 internal interface KokoInternal {
-    fun <T> resolveKObject(
-        type: Class<T>,
+    fun <T: Any> resolveKObject(
+        kotlinType: KClass<T>,
         scope: Any,
         qualifier: String?,
         searchForObjectOutsideCurrentScope: Boolean,
