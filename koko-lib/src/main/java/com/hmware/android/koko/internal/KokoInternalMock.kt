@@ -13,15 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.hmware.android.koko.internal
 
 import com.hmware.android.koko.KModule
 import com.hmware.android.koko.KParametersDefinition
 import com.hmware.android.koko.KScope
 
-internal interface KokoInternal {
-    fun <T> resolveKObject(
+internal class KokoInternalMock : KokoInternal {
+    override fun <T> resolveKObject(
         type: Class<T>,
         scope: Any,
         qualifier: String?,
@@ -29,11 +28,13 @@ internal interface KokoInternal {
         createObjectIfNotFound: Boolean,
         requiredObject: Boolean,
         parameters: KParametersDefinition?
-    ): T?
+    ): T? {
+        return null
+    }
 
-    fun addModule(module: KModule)
+    override fun addModule(module: KModule) {}
 
-    fun clearScope(scope: KScope)
+    override fun clearScope(scope: KScope) {}
 
-    fun reset()
+    override fun reset() {}
 }

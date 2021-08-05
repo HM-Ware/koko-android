@@ -71,9 +71,9 @@ internal class KokoServiceLocatorImpl : KokoServiceLocator {
         if (matchingResult.size > 1) {
             KokoLogger.log(
                     KLogger.Level.ERROR,
-                    "More than one matching object.\n" +
-                            "\t\tOf type [${type.name}]\n" +
-                            "\t\tIn Scope [${scope?.javaClass?.name}]\n" +
+                    "More than one matching object." +
+                            "\t\tType [${type.simpleName}]\n" +
+                            "\t\tIn Scope [${scope?.javaClass?.simpleName}]\n" +
                             "\t\tWith qualifier [$key]"
 
             )
@@ -84,12 +84,21 @@ internal class KokoServiceLocatorImpl : KokoServiceLocator {
     }
 
     override fun clearScope(scope: KScope) {
-        KokoLogger.log(
-                level = KLogger.Level.DEBUG,
-                message = "Clearing object for scope: ${scope::class.java.name}"
-        )
+        var removedObjectCount = 0
 
-        objectList.removeAll { it.scope.get() == scope }
+        objectList.removeAll {
+            if (it.scope.get() == scope) {
+                removedObjectCount ++
+                true
+            }else {
+                false
+            }
+        }
+
+        KokoLogger.log(
+            level = KLogger.Level.INFO,
+            message = "Clearing objects for scope[${scope::class.java.name}] removed object count [$removedObjectCount]"
+        )
     }
 
     override fun reset() {

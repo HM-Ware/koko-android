@@ -16,7 +16,10 @@
 package com.hmware.android.koko
 
 import android.app.Application
+import com.hmware.android.koko.internal.*
 import com.hmware.android.koko.internal.KokoInternal
+import com.hmware.android.koko.internal.KokoInternalImpl
+import com.hmware.android.koko.internal.KokoInternalMock
 import com.hmware.android.koko.internal.KokoLogger
 import com.hmware.android.koko.internal.KokoServiceLocatorImpl
 
@@ -36,11 +39,15 @@ internal object Koko {
         }
 
         KokoLogger.logger = logger
-        kokoInternal = KokoInternal(
+        kokoInternal = KokoInternalImpl(
             application = application,
             serviceLocator = KokoServiceLocatorImpl(),
             modules = modules
         )
+    }
+
+    fun mockKoko() {
+        kokoInternal = KokoInternalMock()
     }
 
     fun terminateKoko() {
@@ -142,6 +149,10 @@ fun startKoko(
         modules: List<KModule>,
         logger: com.hmware.android.koko.api.KLogger? = null
 ) = Koko.startKoko(application, modules, logger)
+
+@Suppress("unused")
+fun mockKoko() = Koko.mockKoko()
+
 
 @Suppress("unused")
 fun terminateKoko() = Koko.terminateKoko()

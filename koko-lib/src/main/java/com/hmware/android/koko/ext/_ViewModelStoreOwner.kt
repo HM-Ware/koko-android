@@ -22,13 +22,13 @@ import com.hmware.android.koko.Koko
 import com.hmware.android.koko.KParametersDefinition
 
 /**
- * Lazy get a viewModel instance
+ * Lazy get a viewModel instance, if new object is created it will be scoped to ViewModelStoreOwner
  *
  * @param qualifier - Koko BeanDefinition qualifier (if have several ViewModel beanDefinition of the same type)
  * @param parameters - parameters to pass to the BeanDefinition
  * @param clazz
  */
-fun <T : ViewModel> ViewModelStoreOwner.kViewModel(
+fun <T : ViewModel> ViewModelStoreOwner.scopedKViewModel(
         clazz: Class<T>,
         qualifier: String? = null,
         parameters: KParametersDefinition? = null
@@ -40,10 +40,10 @@ fun <T : ViewModel> ViewModelStoreOwner.kViewModel(
  * @param qualifier - Koko BeanDefinition qualifier (if have several ViewModel beanDefinition of the same type)
  * @param parameters - parameters to pass to the BeanDefinition
  */
-inline fun <reified T : ViewModel> ViewModelStoreOwner.kViewModel(
+inline fun <reified T : ViewModel> ViewModelStoreOwner.scopedKViewModel(
         qualifier: String? = null,
         noinline parameters: KParametersDefinition? = null
-): Lazy<T> = lazy { getKViewModel<T>(qualifier, parameters) }
+): Lazy<T> = lazy { getScopedKViewModel<T>(qualifier, parameters) }
 
 /**
  * Get a viewModel instance
@@ -51,7 +51,7 @@ inline fun <reified T : ViewModel> ViewModelStoreOwner.kViewModel(
  * @param qualifier - Koko BeanDefinition qualifier (if have several ViewModel beanDefinition of the same type)
  * @param parameters - parameters to pass to the BeanDefinition
  */
-inline fun <reified T : ViewModel> ViewModelStoreOwner.getKViewModel(
+inline fun <reified T : ViewModel> ViewModelStoreOwner.getScopedKViewModel(
         qualifier: String? = null,
         noinline parameters: KParametersDefinition? = null
 ): T {

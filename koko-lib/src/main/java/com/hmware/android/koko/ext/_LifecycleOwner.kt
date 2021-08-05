@@ -20,42 +20,42 @@ import com.hmware.android.koko.Koko
 import com.hmware.android.koko.KParametersDefinition
 
 /**
- * Lazy get an instance
+ * Lazy get an instance, if new object is created it will be scoped to LifecycleOwner
  *
  * @param qualifier - Koko BeanDefinition qualifier (if have several beanDefinition of the same type)
  * @param parameters - parameters to pass to the BeanDefinition
  * @param clazz
  */
-fun <T> LifecycleOwner.kObject(
+fun <T> LifecycleOwner.scopedKObject(
         clazz: Class<T>,
         qualifier: String? = null,
         parameters: KParametersDefinition? = null
 ): Lazy<T> = lazy { getOrCreateKObject(clazz, qualifier, parameters) }
 
 /**
- * Lazy getByClass an instance
+ * Lazy get an instance, if new object is created it will be scoped to LifecycleOwner
  *
  * @param qualifier - Koko BeanDefinition qualifier (if have several beanDefinition of the same type)
  * @param parameters - parameters to pass to the BeanDefinition
  */
-inline fun <reified T> LifecycleOwner.kObject(
+inline fun <reified T> LifecycleOwner.scopedKObject(
         qualifier: String? = null,
         noinline parameters: KParametersDefinition? = null
-): Lazy<T> = lazy { getKObject<T>(qualifier, parameters) }
+): Lazy<T> = lazy { getScopedKObject<T>(qualifier, parameters) }
 
 /**
- * Get an instance
+ * Get an instance, if new object is created it will be scoped to LifecycleOwner
  *
  * @param qualifier - Koko BeanDefinition qualifier (if have several beanDefinition of the same type)
  * @param parameters - parameters to pass to the BeanDefinition
  */
-inline fun <reified T> LifecycleOwner.getKObject(
+inline fun <reified T> LifecycleOwner.getScopedKObject(
         qualifier: String? = null,
         noinline parameters: KParametersDefinition? = null
 ): T {
     return getOrCreateKObject(T::class.java, qualifier, parameters)
-}
 
+}
 
 /**
  * This extension tries to find the given type or creates a new one with the given function
