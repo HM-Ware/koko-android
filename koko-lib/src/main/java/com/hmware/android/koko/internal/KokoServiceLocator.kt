@@ -22,7 +22,7 @@ internal interface KokoServiceLocator {
     fun <T> findBeanDefinition(type: Class<T>, key: Any? = null) : KokoBeanDefinition<T>?
     fun <T> registerBeanDefinition (definition: KokoBeanDefinition<T>)
 
-    fun <T> add(type: Class<T>, obj: T, forScope: KScope, beanDefinition: KokoBeanDefinition<T>)
+    fun <T> add(type: Class<out T>, obj: T, forScope: KScope, beanDefinition: KokoBeanDefinition<T>)
 
     fun <T> get(type: Class<T>, scope: KScope?, key: Any? = null) : T
     fun <T> optional(type: Class<T>, scope: KScope?, key: Any? = null) : T?

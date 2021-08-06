@@ -88,7 +88,7 @@ internal class KokoInternalImpl(
             val factory = definition.factory
             val newObject =
                 scope.factory(parameters?.invoke() ?: KDefinitionParameters.EmptyParameters)
-            serviceLocator.add(type = javaType, obj = newObject, forScope = definition.overrideScope ?: scope, beanDefinition = definition)
+            serviceLocator.add(type= newObject::class.java, obj = newObject, forScope = definition.overrideScope ?: scope, beanDefinition = definition)
             newObject
         } else {
             existingObject

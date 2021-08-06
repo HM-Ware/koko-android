@@ -40,7 +40,7 @@ internal class KokoServiceLocatorImpl : KokoServiceLocator {
     }
 
     override fun <T> add(
-        type: Class<T>,
+        type: Class<out T>,
         obj: T,
         forScope: KScope,
         beanDefinition: KokoBeanDefinition<T>
@@ -107,7 +107,7 @@ internal class KokoServiceLocatorImpl : KokoServiceLocator {
     }
 
     private class BeanRecord<T>(
-            val clazz: Class<T>,
+            val clazz: Class<out T>,
             val obj: T,
             val scope: WeakReference<KScope>,
             val beanDefinition: KokoBeanDefinition<T>
