@@ -16,7 +16,6 @@
 package com.hmware.android.koko
 
 import android.app.Application
-import com.hmware.android.koko.internal.*
 import com.hmware.android.koko.internal.KokoInternal
 import com.hmware.android.koko.internal.KokoInternalImpl
 import com.hmware.android.koko.internal.KokoInternalMock
@@ -47,8 +46,8 @@ internal object Koko {
         )
     }
 
-    fun mockKoko() {
-        kokoInternal = KokoInternalMock()
+    fun mockKoko(classMocker: (KClass<Any>)->Any) {
+        kokoInternal = KokoInternalMock(classMocker)
     }
 
     fun terminateKoko() {
@@ -152,7 +151,7 @@ fun startKoko(
 ) = Koko.startKoko(application, modules, logger)
 
 @Suppress("unused")
-fun mockKoko() = Koko.mockKoko()
+fun mockKoko(classMocker: (KClass<Any>)->Any) = Koko.mockKoko(classMocker)
 
 
 @Suppress("unused")

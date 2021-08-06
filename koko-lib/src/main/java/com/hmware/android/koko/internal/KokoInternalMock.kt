@@ -18,10 +18,9 @@ package com.hmware.android.koko.internal
 import com.hmware.android.koko.KModule
 import com.hmware.android.koko.KParametersDefinition
 import com.hmware.android.koko.KScope
-import io.mockk.mockkClass
 import kotlin.reflect.KClass
 
-internal class KokoInternalMock : KokoInternal {
+internal class KokoInternalMock (private val mockClassProvider : (KClass<Any>)->Any) : KokoInternal {
     override fun <T: Any> resolveKObject(
         kotlinType: KClass<T>,
         scope: Any,
@@ -30,8 +29,8 @@ internal class KokoInternalMock : KokoInternal {
         createObjectIfNotFound: Boolean,
         requiredObject: Boolean,
         parameters: KParametersDefinition?
-    ): T? {
-        return mockkClass(kotlinType, relaxed = true)
+    ): T {
+        return mockClassProvider(kotlinType as KClass<Any>) as T //
     }
 
     override fun addModule(module: KModule) {}
