@@ -101,6 +101,13 @@ internal class KokoServiceLocatorImpl : KokoServiceLocator {
         )
     }
 
+    override fun transferObjectsScope(oldScope: KScope, newScope: KScope) {
+        objectList
+            .asSequence()
+            .filter { it.scope.get() == oldScope }
+            .forEach { it.scope = WeakReference(newScope) }
+    }
+
     override fun reset() {
         factoryList.clear()
         objectList.clear()
@@ -109,7 +116,7 @@ internal class KokoServiceLocatorImpl : KokoServiceLocator {
     private class BeanRecord<T>(
             val clazz: Class<out T>,
             val obj: T,
-            val scope: WeakReference<KScope>,
+            var scope: WeakReference<KScope>,
             val beanDefinition: KokoBeanDefinition<T>
     )
 }

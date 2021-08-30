@@ -33,9 +33,11 @@ internal class KokoInternalImpl(
     private val _modules: MutableList<KModule> = modules.toMutableList()
 
     @Suppress("unused")
-    private val lifecycleListener = KokoLifecycleListener(application) {
-        clearScope(it)
-    }
+    private val lifecycleListener = KokoLifecycleListener(
+        application = application,
+        onScopeFinished = { clearScope(it) },
+        onScopeTransferred = { old, new -> serviceLocator.transferObjectsScope(old, new) }
+    )
 
     init {
         modules

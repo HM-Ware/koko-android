@@ -26,17 +26,50 @@ import com.hmware.android.koko.KScope
 
 internal class KokoLifecycleListener (
         application: Application,
-        private val onScopeFinished: (KScope)->Unit
+        private val onScopeFinished: (KScope)->Unit,
+        private val onScopeTransferred: (oldScope: KScope, newScope: KScope) -> Unit
 ) {
+
+    private val lifecycleListener = KokoLifecycleObserver(onScopeFinished, onScopeTransferred)
+
     private val fragmentListener = object : FragmentLifecycleCallbacks() {
-        override fun onFragmentDetached(fm: FragmentManager, f: Fragment) {
-            onScopeFinished(f)
+        override fun onFragmentPreCreated(
+            fm: FragmentManager,
+            f: Fragment,
+            savedInstanceState: Bundle?
+        ) {
+            lifecycleListener.onPreCreated(f, savedInstanceState)
+        }
+
+        override fun onFragmentSaveInstanceState(
+            fm: FragmentManager,
+            f: Fragment,
+            outState: Bundle
+        ) {
+            lifecycleListener.ontSaveInstanceState(f, outState)
+        }
+
+        override fun onFragmentDestroyed(fm: FragmentManager, f: Fragment) {
+            val destructionReason = if (f.activity?.isChangingConfigurations == true) {
+                KokoLifecycleObserver.LifecycleDestructionReason.CONFIGURATION_CHANGED
+            }else {
+                KokoLifecycleObserver.LifecycleDestructionReason.LIFECYCLE_ENDED
+            }
+
+            lifecycleListener.onDestroyed(f, destructionReason)
         }
     }
 
     private val activityListener = object: Application.ActivityLifecycleCallbacks {
+
+        override fun onActivityPreCreated(activity: Activity, savedInstanceState: Bundle?) {
+            lifecycleListener.onPreCreated(activity, savedInstanceState)
+        }
+
         override fun onActivityCreated(activity: Activity, bundle: Bundle?) {
-            (activity as? FragmentActivity)?.supportFragmentManager?.registerFragmentLifecycleCallbacks(fragmentListener, true)
+            (activity as? FragmentActivity)
+                ?.supportFragmentManager
+                ?.registerFragmentLifecycleCallbacks(fragmentListener, true)
         }
 
         override fun onActivityStarted(p0: Activity) {}
@@ -47,16 +80,29 @@ internal class KokoLifecycleListener (
 
         override fun onActivityStopped(p0: Activity) {}
 
-        override fun onActivitySaveInstanceState(p0: Activity, p1: Bundle) {}
+        override fun onActivitySaveInstanceState(activity: Activity, p1: Bundle) {
+            lifecycleListener.ontSaveInstanceState(activity, p1)
+        }
 
         override fun onActivityDestroyed(activity: Activity) {
-            if (activity.isFinishing) {
-                onScopeFinished(activity)
+
+            val destructionReason = if (activity.isFinishing.not()) {
+                KokoLifecycleObserver.LifecycleDestructionReason.CONFIGURATION_CHANGED
+            }else {
+                KokoLifecycleObserver.LifecycleDestructionReason.LIFECYCLE_ENDED
             }
+
+            lifecycleListener.onDestroyed(activity, destructionReason)
         }
     }
 
     init {
         application.registerActivityLifecycleCallbacks(activityListener)
+    }
+
+
+
+    companion object {
+        private val FRAGMENT_ID = "KokoLifecycleListener.FragmentId"
     }
 }
