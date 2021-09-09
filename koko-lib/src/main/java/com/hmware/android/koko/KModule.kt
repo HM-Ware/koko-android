@@ -38,8 +38,9 @@ class KModule internal constructor(
     }
 
     /**
-     * Declare a Factory definition
-     * @param qualifier
+     * Declare a Object Factory definition
+     * @param qualifier providing a qualifier name allow same object type to be existing more once
+     * inside same scope but with different qualifier name.
      * @param overrideScope When set created object would be attached to that scope and not caller scope.
      * @param definition - definition function
      */
